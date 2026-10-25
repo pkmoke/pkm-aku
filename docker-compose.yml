@@ -1,0 +1,29 @@
+# Produksi. Database TIDAK di sini: pakai Supabase (cloud) lewat DATABASE_URL di backend/.env.
+name: bemai
+
+services:
+  api:
+    build: ./backend
+    container_name: bemai-api
+    restart: unless-stopped
+    env_file: ./backend/.env
+    expose:
+      - "8000"                  # hanya terlihat oleh container lain, tidak dibuka ke host
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+
+  web:
+    build: ./frontend
+    container_name: bemai-web
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "127.0.0.1:8081:80"    # hanya localhost; reverse proxy server yang membuka ke internet
+    mem_limit: 128m

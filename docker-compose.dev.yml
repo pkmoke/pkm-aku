@@ -1,0 +1,45 @@
+# Pengembangan lokal, berdiri sendiri (tidak digabung dengan docker-compose.yml):
+#   docker compose -f docker-compose.dev.yml up --build
+# Buka http://127.0.0.1:8081. Ubah berkas di frontend/ atau backend/app lalu muat ulang.
+# Database dev dibuat otomatis (skema + seed) saat volume masih kosong. Reset: down -v
+name: bemai-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev-admin-lokal
+      POSTGRES_DB: bemai
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db:/db:ro
+      - ./db/dev/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+    ports:
+      - "127.0.0.1:55432:5432"   # port tidak umum agar tidak bentrok dengan Postgres lain
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://bemai_app:dev-sandi-lokal@db:5432/bemai
+      ASAL_DIIZINKAN: http://127.0.0.1:8081
+      COOKIE_SECURE: "false"
+      DOCS_AKTIF: "true"
+    depends_on: [db]
+    volumes:
+      - ./backend/app:/srv/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--proxy-headers", "--forwarded-allow-ips=*"]
+    expose: ["8000"]
+
+  web:
+    build: ./frontend
+    depends_on: [api]
+    ports:
+      - "127.0.0.1:8081:80"
+    volumes:
+      - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
+      - ./frontend/src:/usr/share/nginx/html/src:ro
+      - ./frontend/assets:/usr/share/nginx/html/assets:ro
+
+volumes:
+  dbdata:

@@ -1,0 +1,16 @@
+.env
+*.env
+!.env.example
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.env.*
+!.env.example
+.DS_Store
+*.log
+*.pem
+*.key
+audit/CONNECTED.md
+audit/*results.json

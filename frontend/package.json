@@ -1,0 +1,10 @@
+{
+  "name": "bemai-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bagian tampilan Bemai — chatbot pembelajaran SMP Muhammadiyah",
+  "scripts": {
+    "dev": "npx --yes serve . -l 8899",
+    "dev:python": "python3 -m http.server 8899"
+  }
+}

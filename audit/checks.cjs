@@ -1,0 +1,30 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const root = require('node:path').resolve(__dirname, '..');
+const read = p => fs.readFileSync(root + '/' + p, 'utf8');
+function load(p, globals = {}) {
+ const ctx = vm.createContext(globals);
+ vm.runInContext(read(p).replace(/^import .*;\n/gm, '').replace(/\bexport /g, ''), ctx);
+ return ctx;
+}
+const nodes = new Map();
+const $ = s => { if (!nodes.has(s)) nodes.set(s, {innerHTML:'', style:{}}); return nodes.get(s); };
+const status = {filterTingkat:'VIII', filterRombel:'A', db:{hasil:[{materiId:'m1', kelas:'VIII A', nilai:100, detail:[]},{materiId:'m1',kelas:'VIII B',nilai:0,detail:[]}],materi:[{id:'m1',judul:'Test',kelas:'VIII',rombel:['A','B']}],soal:[],aktivitas:[],chat:[]}};
+load('frontend/src/js/guru/analisis.js', {$,status,ROMBEL:['A','B'],TINGKAT:['VIII'],kodeKelas:(t,r)=>t+' '+r,tingkatDari:k=>k.split(' ')[0],bersihkanDataLama:()=>0,hasilFilter:()=>status.db.hasil.filter(h=>h.kelas==='VIII A'),materiKelas:()=>[],soalKelas:()=>[],rombelLabel:()=> 'A,B',esc:String,jam:String}).renderAnalisis();
+assert.match($('#filterKelasAnalisis').innerHTML,/data-act="status.filterTingkat"/);
+assert.doesNotMatch(read('frontend/src/js/main.js'), /['"]status\.filterTingkat['"]\s*[:(]/);
+console.log('REPRO filter buttons reference unregistered actions');
+assert.match($('#rincianMateri').innerHTML,/2 latihan · rata-rata 50/);
+assert.match($('#distribusiNilai').innerHTML,/Rata-rata 100 dari 1 latihan/);
+console.log('REPRO per-material average ignores selected class: 50 vs expected 100');
+const chat = load('frontend/src/js/siswa/chat.js',{materiSiswa:()=>[{judul:'Fotosintesis',teks:['Daun mengubah cahaya menjadi energi.']}]});
+const answer = chat.cariJawaban('Fotosintesis');
+assert.equal(answer.ok,true); assert.equal(answer.jawab.length,0);
+console.log('REPRO title-only match returns success with empty answer');
+const selection = load('frontend/src/js/seleksi.js',{status:{kelasSiswa:'VII B',db:{materi:[{id:'m1',kelas:'VIII',rombel:['A']}],soal:[{id:'q1',materiId:'m1',kelas:['VII B']}] }},ROMBEL:['A','B'],tingkatDari:k=>k.split(' ')[0],rombelDari:k=>k.split(' ')[1]});
+assert.equal(vm.runInContext("materiKelas('VII B').length", selection),0); assert.equal(vm.runInContext("soalKelas('VII B').length", selection),1);
+console.log('REPRO cross-class question exists but source material is excluded from quiz picker');
+const storage = load('frontend/src/js/status.js',{SEED:{materi:[],soal:[]},ROMBEL:['A'],TTL_HARI:86400000,KEY:'bemai.v1',kodeKelas:(t,r)=>t+' '+r,localStorage:{getItem:()=>null,setItem:()=>{throw Error('QuotaExceededError')}}});
+assert.doesNotThrow(()=>storage.simpanKe({materi:['unsaved']}));
+console.log('REPRO persistence failure is silently swallowed');

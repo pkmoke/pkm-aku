@@ -1,0 +1,69 @@
+@property --p{syntax:'<number>';inherits:false;initial-value:0}
+
+.hamburger{
+  align-items:center;justify-content:center;padding:0;gap:5px;flex:0 0 auto;
+  transition:background .25s var(--ease),transform .25s var(--ease),box-shadow .3s var(--ease)
+}
+.hamburger span{
+  display:block;width:19px;height:2.5px;border-radius:9px;background:var(--hijau-tua);
+  transition:transform .4s var(--ease-out),opacity .25s var(--ease),width .3s var(--ease)
+}
+.hamburger:active{transform:scale(.93)}
+.hamburger[aria-expanded="true"]{background:var(--hijau-muda);box-shadow:inset 0 0 0 1px rgba(17,132,83,.22)}
+.hamburger[aria-expanded="true"] span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
+.hamburger[aria-expanded="true"] span:nth-child(2){opacity:0;transform:scaleX(.35)}
+.hamburger[aria-expanded="true"] span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg)}
+body.nav-terbuka{overflow:hidden}
+
+[data-tilt]{
+  transform-style:preserve-3d;transform:perspective(1100px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transition:transform .55s var(--ease-out),box-shadow .55s var(--ease)
+}
+.card.chat[data-tilt],.card.chat[data-tilt]:hover{transform:none}
+
+.list > *{animation:fadeUp .45s var(--ease-out) both}
+.list > *:nth-child(2){animation-delay:.06s}
+.list > *:nth-child(3){animation-delay:.12s}
+.list > *:nth-child(4){animation-delay:.18s}
+.list > *:nth-child(5){animation-delay:.24s}
+.list > *:nth-child(n+6){animation-delay:.3s}
+.grid > *{animation:fadeUp .5s var(--ease-out) both}
+.grid > *:nth-child(2){animation-delay:.06s}
+.grid > *:nth-child(3){animation-delay:.12s}
+.grid > *:nth-child(4){animation-delay:.18s}
+.grid > *:nth-child(5){animation-delay:.24s}
+.grid > *:nth-child(n+6){animation-delay:.3s}
+
+.skor-ring{transition:--p 1.2s var(--ease-out),box-shadow .5s var(--ease)}
+.unggah-area{transition:border-color .3s,background .3s,transform .35s var(--ease)}
+.unggah-area.sorot{border-color:var(--hijau);background:var(--hijau-muda);transform:scale(1.012)}
+.unggah-ikon svg{transition:transform .5s var(--ease-out)}
+.unggah-area:hover .unggah-ikon svg{transform:translateY(-4px) rotate(-3deg)}
+
+.keluar-view{animation:keluarView .4s var(--ease) both}
+.masuk-view{animation:masukView .55s var(--ease-out) both}
+
+html.tenang *,html.tenang *::before,html.tenang *::after{animation:none !important;transition:none !important}
+html.tenang .nav button.active{background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+html.tenang .nav-glow{opacity:0}
+html.tenang .login-latar{animation:none !important;transform:scale(1.04)}
+
+@media (max-width:900px){
+  .top-title{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-chip .tag{font-size:10.5px;padding:4px 9px}
+  .hamburger{display:flex;flex-direction:column;width:44px;height:44px;border-radius:14px;margin-right:2px}
+  .sidebar{border-radius:0 var(--r-lg) var(--r-lg) 0;opacity:.65;
+    transition:transform .52s var(--ease-out),opacity .34s var(--ease),box-shadow .45s var(--ease)}
+  .sidebar.open{opacity:1}
+  .sidebar.open .brand,.sidebar.open > .role,.sidebar.open .nav-grup > *,.sidebar.open .sidebar-foot{
+    animation:menuMasuk .5s var(--ease-out) both}
+  .sidebar.open .role{animation-delay:.06s}
+  .sidebar.open .nav-grup:nth-of-type(1) > *:nth-child(1){animation-delay:.10s}
+  .sidebar.open .nav-grup:nth-of-type(1) > *:nth-child(2){animation-delay:.14s}
+  .sidebar.open .nav-grup:nth-of-type(1) > *:nth-child(3){animation-delay:.18s}
+  .sidebar.open .nav-grup:nth-of-type(1) > *:nth-child(4){animation-delay:.22s}
+  .sidebar.open .nav-grup:nth-of-type(2) > *:nth-child(1){animation-delay:.26s}
+  .sidebar.open .nav-grup:nth-of-type(2) > *:nth-child(2){animation-delay:.30s}
+  .sidebar.open .nav-grup:nth-of-type(2) > *:nth-child(3){animation-delay:.34s}
+  .sidebar.open .sidebar-foot{animation-delay:.38s}
+}
