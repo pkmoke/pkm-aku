@@ -4,10 +4,10 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Bemai — Chatbot Pembelajaran SMP Muhammadiyah</title>
-  <link rel="stylesheet" href="src/styles/dasar.css?v=8"/>
-  <link rel="stylesheet" href="src/styles/tata-letak.css?v=8"/>
-  <link rel="stylesheet" href="src/styles/halaman.css?v=8"/>
-  <link rel="stylesheet" href="src/styles/animasi.css?v=8"/>
+  <link rel="stylesheet" href="src/styles/dasar.css?v=9"/>
+  <link rel="stylesheet" href="src/styles/tata-letak.css?v=9"/>
+  <link rel="stylesheet" href="src/styles/halaman.css?v=9"/>
+  <link rel="stylesheet" href="src/styles/animasi.css?v=9"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -71,7 +71,7 @@
         <input id="loginPass" type="password" autocomplete="current-password"/>
       </div>
       <button class="btn primary lebar" data-act="masuk">Masuk</button>
-      <div class="notice catatan-demo">Demo: chatbot menjawab dengan pencarian sederhana di materi sekolah, <b>belum memakai LLM</b>. Akun, materi dan hasil latihan tersimpan di server.</div>
+      <div class="notice catatan-demo">Chatbot menjawab dari pencarian di materi sekolah, <b>belum memakai LLM</b>. Akun, materi dan hasil latihan tersimpan di server sekolah.</div>
     </div>
   </div>
 </div>
@@ -110,6 +110,7 @@
         <span class="nav-judul">Kelola</span>
         <button data-act="bukaHalaman" data-page="t-materi"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M4 5.5v15"/></svg><span>Kelola Materi</span></button>
         <button data-act="bukaHalaman" data-page="t-soal"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M15 8h4M15 4v4"/><path d="M8.5 13.5l1.8 1.8 3.4-3.6"/></svg><span>Kelola Soal</span></button>
+        <button data-act="bukaHalaman" data-page="t-siswa"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c1.1-3.4 3.8-5.1 7-5.1s5.9 1.7 7 5.1"/></svg><span>Kelola Siswa</span></button>
         <button data-act="bukaHalaman" data-page="t-upload"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5"/><path d="M8 9l4-4 4 4"/><path d="M4 15.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.5"/></svg><span>Upload Dokumen</span></button>
       </div>
     </nav>
@@ -466,6 +467,76 @@
         </div>
       </div>
 
+      <div id="t-siswa" class="page">
+        <div class="kepala">
+          <div>
+            <h1>Kelola Siswa</h1>
+            <p class="muted">Akun siswa dibuat dari sini. Guru memegang sandi awalnya, siswa wajib menggantinya saat pertama masuk.</p>
+          </div>
+          <div class="kepala-aksi"><span class="tag">Total siswa <b id="jumlahSiswa">0</b></span></div>
+        </div>
+        <div class="kerangka-halaman">
+          <div class="grid g2"><div class="kotak sedang"></div><div class="kotak sedang"></div></div>
+          <div class="kotak sedang"></div>
+        </div>
+
+        <div class="grid g2">
+          <div class="card">
+            <div class="kartu-judul">
+              <div class="kartu-judul-teks">
+                <span class="kartu-judul-ikon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.4"/><path d="M5 20c1.1-3.4 3.8-5.1 7-5.1s5.9 1.7 7 5.1"/><path d="M19 5v4M17 7h4"/></svg></span>
+                <div><h2>Tambah satu akun</h2><p class="small muted">Isi identitas siswa, lalu sistem membuatkan sandi awal.</p></div>
+              </div>
+            </div>
+            <div class="formgrid">
+              <div><label for="siswaNis">NIS</label><input id="siswaNis" placeholder="2410114" autocomplete="off"/></div>
+              <div><label for="siswaNama">Nama lengkap</label><input id="siswaNama" placeholder="Nama siswa" autocomplete="off"/></div>
+              <div><label for="siswaTingkat">Tingkat</label>
+                <select id="siswaTingkat"><option>VII</option><option selected>VIII</option><option>IX</option></select></div>
+              <div><label for="siswaRombel">Rombel</label>
+                <select id="siswaRombel"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select></div>
+            </div>
+            <div class="btnrow jarak-atas"><button class="btn primary" data-act="tambahSiswa">Buat akun siswa</button></div>
+          </div>
+
+          <div class="card">
+            <div class="kartu-judul">
+              <div class="kartu-judul-teks">
+                <span class="kartu-judul-ikon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5Z"/><path d="M8 8h7M8 12h7"/></svg></span>
+                <div><h2>Impor satu kelas</h2><p class="small muted">Tempel daftar dari buku absen, satu siswa per baris.</p></div>
+              </div>
+            </div>
+            <div class="formgrid">
+              <div><label for="imporTingkat">Tingkat</label>
+                <select id="imporTingkat"><option>VII</option><option selected>VIII</option><option>IX</option></select></div>
+              <div><label for="imporRombel">Rombel</label>
+                <select id="imporRombel"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select></div>
+              <div class="full"><label for="imporTeks">Daftar siswa (NIS,Nama)</label>
+                <textarea id="imporTeks" placeholder="2410114,Ahmad Fauzi&#10;2410115,Siti Aminah"></textarea></div>
+            </div>
+            <div class="btnrow jarak-atas"><button class="btn primary" data-act="imporSiswa">Impor daftar</button></div>
+          </div>
+        </div>
+
+        <div class="card card-tabel">
+          <div class="kartu-judul">
+            <div class="kartu-judul-teks">
+              <span class="kartu-judul-ikon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+              <div><h2>Daftar siswa</h2><p class="small muted" id="infoSiswa">Semua siswa yang punya akun.</p></div>
+            </div>
+          </div>
+          <div class="saringan" style="padding:16px 20px 0">
+            <div class="kelasbar" id="filterSiswaTingkat"></div>
+            <div class="kelasbar" id="filterSiswaRombel" style="display:none"></div>
+            <div class="btnrow" style="margin-top:12px">
+              <input id="cariSiswa" placeholder="Cari NIS atau nama" style="max-width:280px" autocomplete="off"/>
+              <button class="btn ghost small" data-act="cariSiswa">Cari</button>
+            </div>
+          </div>
+          <div id="tabelSiswa" style="overflow:auto"></div>
+        </div>
+      </div>
+
       <div id="t-analisis" class="page">
         <div class="kepala">
           <div>
@@ -521,9 +592,18 @@
           </div>
           <div id="rincianMateri"></div>
         </div>
+        <div class="card">
+          <div class="kartu-judul">
+            <div class="kartu-judul-teks">
+              <span class="kartu-judul-ikon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 20v-6M12 20V8M17 20v-4"/></svg></span>
+              <div><h2>Rekap 30 Hari</h2><p class="small muted">Angka yang tetap tersimpan setelah data 24 jam dibersihkan.</p></div>
+            </div>
+          </div>
+          <div class="list" id="rekapHarian"></div>
+        </div>
       </div>
 
-      <div class="footer-note">Bemai Prototype (revisi) · PKM Implementasi Chatbot AI · Data disimpan di browser (localStorage) — data analisis dipertahankan 24 jam lalu dihapus otomatis</div>
+      <div class="footer-note">Bemai · PKM Implementasi Chatbot AI · Data tersimpan di server sekolah — analisis mentah disimpan 24 jam, lalu diringkas per hari</div>
     </section>
   </main>
 </div>
@@ -541,7 +621,7 @@
 
 <div class="toast" id="toast"></div>
 
-  <script type="module" src="src/js/main.js?v=4"></script>
+  <script type="module" src="src/js/main.js?v=5"></script>
 
 </body>
 </html>

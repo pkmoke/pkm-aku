@@ -50,6 +50,8 @@ def db():
 def akun(db):
     """Guru dan dua siswa (VIII A, VII B). Semua sudah lewat tahap ganti sandi awal."""
     from app.akun import buat_guru, buat_siswa
+    # Sisa akun uji dari jalannya tes yang terputus tidak boleh menggagalkan setup.
+    db.execute("delete from pengguna where email like '%@uji.test' or nis like 'UJI%'")
     buat_guru(db, "guru@uji.test", "Guru Uji", "sandi-guru-uji")
     out = {"guru": ("guru@uji.test", "sandi-guru-uji")}
     for kunci, nis, tingkat, rombel in (("siswa", "UJI001", "VIII", "A"), ("siswa2", "UJI002", "VII", "B")):

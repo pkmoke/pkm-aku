@@ -38,7 +38,8 @@ def daftar_soal(conn, p, materi_id=None, kunci=False):
     out = []
     for r in rows:
         s = dict(id=str(r['id']), materiId=str(r['materi_id']), topik=r['topik'],
-                 tanya=r['tanya'], opsi=r['opsi'], kelas=r['kelas'])
+                 tanya=r['tanya'], opsi=r['opsi'], kelas=r['kelas'],
+                 otomatis=bool(r.get('otomatis')))
         if p.peran == 'guru' or kunci:
             s.update(jawaban=r['jawaban'], pembahasan=r['pembahasan'])
         out.append(s)

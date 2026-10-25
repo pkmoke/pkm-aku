@@ -47,15 +47,25 @@ export function renderPilihLatihan() {
 
 let sesi = null;
 
-export function mulaiLatihan(paksaId, ulangIds = null, asalId = null) {
+function kunciBaru() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+export async function mulaiLatihan(paksaId, _ulangIds = null, asalId = null) {
   const id = paksaId || $('#pilihMateriLatihan').value;
   const m = status.db.materi.find((x) => x.id === id);
-  const tersedia = soalSiswa().filter((s) => s.materiId === id && (!ulangIds || ulangIds.includes(s.id)));
-  if (!m || !tersedia.length) { toast('Belum ada soal untuk materi ini'); return; }
-  // Snapshot questions so a later edit cannot change an attempt already in progress.
-  const daftar = structuredClone(tersedia);
+  if (!m) { toast('Pilih materi latihan dulu'); return; }
+  // Daftar soal dibekukan server: guru boleh mengubah soal tanpa menggagalkan percobaan ini.
+  let mulai;
+  try {
+    mulai = await api.post('/latihan/mulai', { materiId: id, ulangDari: asalId || null });
+  } catch (e) { toast(e.message); return; }
+  const daftar = structuredClone(mulai.soal);
+  if (!daftar.length) { toast('Belum ada soal untuk materi ini'); return; }
   const materi = structuredClone(m);
-  sesi = { materi, daftar, selesai: false, asalId, kelas: status.kelasSiswa };
+  sesi = { materi, daftar, selesai: false, asalId, kelas: status.kelasSiswa,
+    sesiId: mulai.sesiId, kunci: kunciBaru() };
   const form = elemen('form', { id: 'formLatihan' },
     daftar.map((s, i) => elemen('div', { style: 'margin-bottom:20px', 'data-soal': s.id },
       elemen('p', { style: 'font-weight:700;margin:0 0 10px' }, `${i + 1}. ${s.tanya}`),
@@ -68,7 +78,7 @@ export function mulaiLatihan(paksaId, ulangIds = null, asalId = null) {
     elemen('div', { class: 'card' },
       elemen('span', { class: 'tag' }, `${m.mapel} · ${status.kelasSiswa}`),
       elemen('h2', { style: 'margin-top:12px' }, m.judul),
-      elemen('p', { class: 'muted small' }, `${ulangIds ? 'Latihan ulang · ' : ''}${daftar.length} soal · pilih satu jawaban per soal`),
+      elemen('p', { class: 'muted small' }, `${asalId ? 'Latihan ulang · ' : ''}${daftar.length} soal · pilih satu jawaban per soal`),
       elemen('div', { class: 'bilah-jawab' }, elemen('span', { id: 'bilahJawab' })), form));
   form.addEventListener('submit', (e) => { e.preventDefault(); kumpulkanLatihan().catch(e => toast(e.message)); });
   form.addEventListener('change', () => {
@@ -104,8 +114,8 @@ export async function kumpulkanLatihan() {
   submitAwal.disabled = true;
   let hasil;
   try {
-    hasil = await api.post('/latihan', { materiId: m.id, ulangDari: asalId,
-      jawaban: detail.map(d => ({ soalId: d.soalId, pilihan: d.jawab })) });
+    hasil = await api.post('/latihan', { materiId: m.id, ulangDari: asalId, sesiId: sesi.sesiId,
+      kunci: sesi.kunci, jawaban: detail.map(d => ({ soalId: d.soalId, pilihan: d.jawab })) });
     await muat();
   } catch (e) { submitAwal.disabled = false; toast(e.message); return; }
   sesi.selesai = true;

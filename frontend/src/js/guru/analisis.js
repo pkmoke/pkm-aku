@@ -2,9 +2,9 @@ import { api } from '../api.js';
 import { muat } from '../status.js';
 import { ROMBEL, TINGKAT, kodeKelas, tingkatDari } from '../konstanta.js';
 import { hasilFilter, materiKelas, materiTingkat, rombelLabel, soalKelas, soalTingkat } from '../seleksi.js';
-import { bersihkanDataLama, simpan } from '../status.js';
+import { bersihkanDataLama } from '../status.js';
 import { aturRoleUI, bukaModal, toast, tutupModal } from '../ui.js';
-import { $, esc, jam } from '../util.js';
+import { $, elemen, esc, jam } from '../util.js';
 import { status } from '../status.js';
 
 export function renderAnalisis() {
@@ -17,10 +17,15 @@ export function renderAnalisis() {
     `<button class="chipkelas" data-act="filterRombel" data-rombel="${r}" aria-pressed="${status.filterRombel === r}">${r === 'semua' ? 'Semua rombel' : status.filterTingkat + ' ' + r}</button>`).join('');
   $('#filterRombelAnalisis').style.display = status.filterTingkat === 'semua' ? 'none' : 'flex';
 
+  const lingkup = status.filterTingkat === 'semua' ? 'seluruh kelas'
+    : status.filterRombel === 'semua' ? 'kelas ' + status.filterTingkat : 'kelas ' + status.filterTingkat + ' ' + status.filterRombel;
+  const labelTombol = status.filterTingkat === 'semua' ? 'Pilih kelas untuk menghapus'
+    : 'Hapus data ' + lingkup;
   $('#ttlInfo').innerHTML =
     `<b>Data analisis disimpan 24 jam saja.</b> Hasil latihan &amp; riwayat yang lebih tua dihapus otomatis supaya tidak menumpuk di database — jadi semua angka di halaman ini hanya untuk <b>1 hari terakhir</b>.` +
     `<div class="small" style="margin-top:8px">Tersimpan sekarang: <b>${status.db.hasil.length}</b> hasil latihan · <b>${status.db.aktivitas.length}</b> aktivitas · <b>${status.db.chat.length}</b> riwayat chat. Terakhir dibersihkan ${jam(status.db.bersihTerakhir || Date.now())} · total sudah dihapus otomatis: <b>${status.db.dihapus || 0}</b> baris.</div>` +
-    `<div class="btnrow" style="margin-top:10px"><button class="btn danger small" data-act="hapusAnalisis"> Hapus data analisis sekarang</button></div>`;
+    `<div class="btnrow" style="margin-top:10px"><button class="btn danger small" data-act="hapusAnalisis">${labelTombol}</button><button class="btn ghost small" data-act="eksporNilai">Unduh nilai (CSV)</button></div>` +
+    `<div class="small" style="margin-top:8px">Pilih tingkat (dan rombel) di atas untuk menghapus data kelas itu saja. Tanpa pilihan, penghapusan ditolak.</div>`;
 
   const barisRingkasan = (judul, cocok, materiN, soalN) => {
     const h = status.db.hasil.filter(cocok);
@@ -85,17 +90,60 @@ export function renderAnalisis() {
     return `<div class="list-item"><span>${esc(m.judul)} <span class="tag">kelas ${esc(m.kelas)} — ${esc(rombelLabel(m))}</span><div class="small muted">${h.length} latihan · rata-rata ${r}</div></span>
       <span class="tag ${r >= 80 ? 'green' : 'amber'}">${r >= 80 ? 'baik' : 'perlu penguatan'}</span></div>`;
   }).join('') || '<p class="muted">Belum ada materi untuk kelas ini.</p>';
+
+  muatRekap().catch((e) => toast(e.message));
+}
+
+function lingkupSekarang() {
+  if (status.filterTingkat === 'semua') return null;
+  return { tingkat: status.filterTingkat, rombel: status.filterRombel === 'semua' ? '' : status.filterRombel };
+}
+
+async function muatRekap() {
+  const el = $('#rekapHarian');
+  if (!el) return;
+  const q = new URLSearchParams({ hari: '30' });
+  const l = lingkupSekarang();
+  if (l) { q.set('tingkat', l.tingkat); if (l.rombel) q.set('rombel', l.rombel); }
+  const data = await api.get('/rekap?' + q.toString());
+  el.innerHTML = data.perKelas.length
+    ? data.perKelas.map((r) => `<div class="list-item"><span>Kelas ${esc(r.kelas)}
+        <div class="small muted">${r.latihan} latihan dalam 30 hari</div></span>
+        <span class="tag ${r.rataRata != null && r.rataRata >= 80 ? 'green' : 'amber'}">${r.rataRata == null ? '—' : r.rataRata + '%'}</span></div>`).join('')
+      + `<p class="small muted" style="margin-top:10px">Diambil dari rekap harian yang disimpan sebelum data 24 jam dibersihkan. Total ${data.totalLatihan} latihan.</p>`
+    : '<p class="muted">Belum ada rekap harian. Rekap terisi setelah pembersihan otomatis berjalan di server.</p>';
+}
+
+export async function eksporNilai() {
+  const q = new URLSearchParams();
+  const l = lingkupSekarang();
+  if (l) { q.set('tingkat', l.tingkat); if (l.rombel) q.set('rombel', l.rombel); }
+  const res = await fetch('/api/ekspor?' + q.toString(), { credentials: 'same-origin' });
+  if (!res.ok) { toast('Gagal mengunduh nilai'); return; }
+  const blob = await res.blob();
+  const tautan = elemen('a', { href: URL.createObjectURL(blob), download: 'nilai-bemai.csv' });
+  document.body.append(tautan);
+  tautan.click();
+  tautan.remove();
+  URL.revokeObjectURL(tautan.href);
+  toast('Nilai diunduh sebagai CSV');
 }
 
 export async function hapusAnalisisSekarang() {
-  if (!confirm('Hapus semua data analisis (hasil latihan, aktivitas, riwayat chat) sekarang?')) return;
-  await api.hapus('/analisis');
-  const jumlah = status.db.hasil.length + status.db.aktivitas.length + status.db.chat.length;
-  status.db.hasil = []; status.db.aktivitas = []; status.db.chat = [];
-  status.db.dihapus = (status.db.dihapus || 0) + jumlah;
-  simpan();
+  const l = lingkupSekarang();
+  if (!l) {
+    toast('Pilih tingkat dan rombel dulu — penghapusan dilakukan per kelas, bukan seluruh sekolah');
+    return;
+  }
+  const label = l.rombel ? l.tingkat + ' ' + l.rombel : 'semua rombel kelas ' + l.tingkat;
+  if (!confirm('Hapus hasil latihan, riwayat chat, dan aktivitas kelas ' + label + '? Tindakan ini tidak bisa dibatalkan.')) return;
+  const q = new URLSearchParams({ tingkat: l.tingkat });
+  if (l.rombel) q.set('rombel', l.rombel);
+  const data = await api.hapus('/analisis?' + q.toString());
+  await muat();
   renderAnalisis();
-  toast(jumlah + ' baris data analisis dihapus');
+  const jumlah = data && data.dihapus ? Object.values(data.dihapus).reduce((a, b) => a + b, 0) : 0;
+  toast(jumlah + ' baris data kelas ' + label + ' dihapus');
 }
 
 export function catatanTeknis() {

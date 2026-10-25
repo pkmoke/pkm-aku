@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -60,6 +61,16 @@ async def galat_http(_: Request, e: StarletteHTTPException):
 @app.exception_handler(RequestValidationError)
 async def galat_validasi(_: Request, e: RequestValidationError):
     return _galat(400, "data_tidak_valid", "Data yang dikirim tidak valid")
+
+
+logger = logging.getLogger("bemai")
+
+
+@app.exception_handler(Exception)
+async def galat_tak_terduga(request: Request, e: Exception):
+    """Kegagalan tak terduga tetap dijawab dengan bentuk JSON yang sama seperti kontrak API."""
+    logger.exception("galat tak terduga pada %s %s", request.method, request.url.path)
+    return _galat(500, "galat_server", "Terjadi kesalahan pada server")
 
 
 @app.middleware("http")

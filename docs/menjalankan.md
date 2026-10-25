@@ -59,7 +59,10 @@ Tidak tersedia pendaftaran guru publik.
 
 ### 4. Buat akun siswa untuk pengujian
 
-Endpoint pengelolaan siswa masih kerangka. Gunakan helper akun server melalui terminal:
+Cara normal: login guru, buka **Kelola Siswa**, lalu buat satu akun atau tempel daftar
+kelas (format `NIS,Nama` per baris). Sandi awal hanya muncul sekali.
+
+Untuk membuat akun lewat terminal (misalnya sebelum frontend terbaru terpasang):
 
 ```sh
 docker compose -f docker-compose.dev.yml exec api python -c "import psycopg; from psycopg.rows import dict_row; from app.config import pengaturan; from app.akun import buat_siswa; conn=psycopg.connect(pengaturan().database_url, row_factory=dict_row); ident,sandi=buat_siswa(conn, 'UJI8A', 'Siswa Penguji', 'VIII', 'A'); conn.commit(); conn.close(); print('ID:',ident); print('Sandi awal:',sandi)"
@@ -93,14 +96,14 @@ docker compose -f docker-compose.dev.yml up -d --build
 
 Jika ada migrasi baru dan volume sudah berisi database, jalankan hanya migrasi baru
 sebagai admin. Migrasi awal tidak dijalankan ulang otomatis. Contoh untuk volume versi
-lama yang belum mempunyai kolom ownership aktivitas:
+lama yang belum mempunyai sesi latihan dan kolom idempotensi:
 
 ```sh
-docker compose -f docker-compose.dev.yml exec db psql -U postgres -d bemai -v ON_ERROR_STOP=1 -f /db/migrations/0004_aktivitas_siswa.sql
+docker compose -f docker-compose.dev.yml exec db psql -U postgres -d bemai -v ON_ERROR_STOP=1 -f /db/migrations/0005_sesi_latihan.sql
 ```
 
-Jangan menjalankan contoh migrasi itu jika sudah diterapkan: migrasi saat ini belum
-memiliki runner/version table. `down -v` menghapus volume beserta seluruh akun dan hasil;
+Migrasi `0005_sesi_latihan.sql` aman diulang (semua perintahnya idempoten), tetapi
+migrasi lama tidak: proyek ini belum memiliki runner/version table. `down -v` menghapus volume beserta seluruh akun dan hasil;
 hindari opsi tersebut bila data masih diperlukan.
 
 ## Pilihan B — Python dan PostgreSQL tanpa Docker
@@ -229,13 +232,13 @@ service api. Jangan memakai credential dev untuk deployment publik produksi.
 | NIS/email sudah ada | Gunakan identitas unik atau login dengan akun yang sudah dibuat. |
 | 403 `wajib_ganti_sandi` | Selesaikan ganti sandi awal di web. |
 | 400 saat menerbitkan soal | Kelas soal harus termasuk kelas materi sumber. |
-| API 501 | Fitur masih kerangka; bukan kesalahan login. Lihat batas fitur pada README. |
+| API 501 | Hanya ekstraksi dokumen (`/materi/unggah`) yang masih kerangka; bukan kesalahan login. |
 
 ## Batas fitur dan produksi
 
-Chat menggunakan pencarian teks di server, belum LLM. Ekstraksi PDF/DOCX dan endpoint
-manajemen siswa belum tersedia. Masalah lockout/rate limit serta dependency/deployment
-belum seluruhnya diselesaikan. `db/pg_cron.sql` digunakan pada PostgreSQL yang mempunyai
+Chat menggunakan pencarian teks di server, belum LLM. Ekstraksi PDF/DOCX belum tersedia.
+Akun siswa, impor, reset sandi, rekap 30 hari, dan unduhan CSV sudah tersedia. Masih
+terbuka: kepemilikan materi/soal per guru dan rate limit nginx pada server lokal. `db/pg_cron.sql` digunakan pada PostgreSQL yang mempunyai
 pg_cron; lokal tidak otomatis menjadwalkan pembersihan fisik meskipun pembacaan riwayat
 sudah memakai filter 24 jam. Lihat [laporan audit](../audit/REVIEW.md) dan
 [panduan deploy](deploy.md) sebelum merencanakan produksi.

@@ -1,7 +1,7 @@
 import { api } from '../api.js';
 import { muat } from '../status.js';
 import { ROMBEL, TINGKAT, kodeKelas } from '../konstanta.js';
-import { definisiDariMateri, kodeMateri, rombelLabel } from '../seleksi.js';
+import { kodeMateri, rombelLabel } from '../seleksi.js';
 import { catat, simpan } from '../status.js';
 import { bukaModal, toast, tutupModal } from '../ui.js';
 import { $, esc, renderOpsi } from '../util.js';
@@ -66,24 +66,15 @@ export function renderPilihKelas(sel, tercentang) {
     </div>`).join('');
 }
 
-export function generateSoal() {
+export async function generateSoal() {
   const m = status.db.materi.find((x) => x.id === $('#soalMateri').value);
   if (!m) { toast('Pilih materi dulu'); return; }
   const jumlah = Math.max(2, Math.min(8, Number($('#soalJumlah').value) || 4));
-  const def = definisiDariMateri(m);
-  if (def.length < 3) { toast('Materi ini belum punya cukup kalimat definisi'); return; }
-
-  const dibuat = [];
-  const acak = def.slice().sort(() => Math.random() - 0.5).slice(0, Math.min(jumlah, def.length));
-  acak.forEach((d, i) => {
-    const salah = def.filter((x) => x.istilah !== d.istilah).sort(() => Math.random() - 0.5).slice(0, 3).map((x) => x.arti);
-    const opsi = [d.arti, ...salah].sort(() => Math.random() - 0.5);
-    dibuat.push({
-      id: 'q' + (Date.now() + i), materiId: m.id, topik: 'Definisi', otomatis: true,
-      tanya: 'Apa yang dimaksud dengan ' + d.istilah + '?',
-      opsi, jawaban: opsi.indexOf(d.arti), pembahasan: d.istilah + ' adalah ' + d.arti
-    });
-  });
+  let dibuat;
+  try {
+    dibuat = (await api.post('/soal/generate', { materiId: m.id, jumlah })).usulan;
+  } catch (e) { toast(e.message); return; }
+  if (!dibuat || !dibuat.length) { toast('Belum ada soal yang bisa dibuat dari materi ini'); return; }
 
   bukaModal('Draft soal', 'Preview ' + dibuat.length + ' soal dari "' + m.judul + '"',
     dibuat.map((s, i) => `<p style="margin:0 0 6px"><b>${i + 1}. ${esc(s.tanya)}</b></p>

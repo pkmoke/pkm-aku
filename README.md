@@ -1,8 +1,9 @@
 # pkm-aku — Bemai, aplikasi pembelajaran terhubung
 
-Frontend ES modules, backend FastAPI, dan PostgreSQL. Login, sesi, materi, soal,
-penilaian, latihan ulang, chat, rangkuman yang disimpan, riwayat dan analisis kini
-menggunakan API. localStorage tidak dipakai sebagai database atau sumber hak akses.
+Frontend ES modules, backend FastAPI, dan PostgreSQL. Login, sesi, kelola akun siswa,
+materi, soal, penilaian, latihan ulang, chat, rangkuman, riwayat, analisis, rekap harian,
+dan unduhan nilai menggunakan API. localStorage tidak dipakai sebagai database atau
+sumber hak akses.
 
 ## Clone repository
 
@@ -29,8 +30,9 @@ Buat guru melalui CLI; tidak ada pendaftaran guru publik:
 docker compose -f docker-compose.dev.yml exec api python -m app.cli buat-guru --email guru@sekolah.sch.id --nama 'Nama Guru'
 ```
 
-Database yang sudah ada perlu menerapkan migrasi baru `0004_aktivitas_siswa.sql`
-sebagai admin. Jangan menerapkan ulang seluruh migrasi pada database yang sudah berisi skema.
+Database yang sudah ada perlu menerapkan migrasi baru `0005_sesi_latihan.sql`
+sebagai admin (file migrasi terbaru dibuat idempoten). Jangan menerapkan ulang seluruh
+migrasi pada database yang sudah berisi skema.
 
 ### Tanpa Docker / tunnel ngrok
 
@@ -60,24 +62,29 @@ file dan tidak menyediakan `/api`.
 - Materi/soal siswa difilter kelas di server. Kunci dan pembahasan tidak ada pada daftar soal siswa.
 - Server menghitung nilai; field nilai/benar dari client tidak dijadikan sumber kebenaran.
 - Submit normal harus memuat seluruh soal yang tersedia; retry hanya soal salah dari hasil milik siswa tersebut.
+- Daftar soal dibekukan server saat latihan dimulai (`/latihan/mulai`), dan pengumpulan
+  dengan `kunci` yang sama tidak membuat baris hasil ganda.
+- Hapus analisis wajib memilih tingkat/rombel; tidak ada lagi penghapusan seluruh sekolah.
 - Tujuan soal harus termasuk kelas materi sumber. Perubahan kelas materi yang membuat soal tidak konsisten ditolak.
 - Riwayat hasil/chat/aktivitas dipisahkan berdasarkan ID siswa. Filter waktu 24 jam diterapkan ketika membaca data.
 - Pembersihan fisik/rekap retensi memerlukan penjadwalan `db/pg_cron.sql`; PostgreSQL lokal tidak otomatis mempunyai pg_cron.
 - Data seed jawaban tidak disajikan oleh entrypoint lokal atau nginx.
 
-Ini lingkungan pengujian, bukan pernyataan semua temuan audit selesai. Temuan login
-paralel, kebijakan lockout dan throttling ganti sandi masih perlu diperbaiki; server lokal
-terintegrasi juga belum mempunyai rate limit nginx. Jangan gunakan akun/data sekolah nyata dahulu.
+Ini lingkungan pengujian, bukan pernyataan semua temuan audit selesai. Hitungan gagal
+login sudah atomik dan direset setelah masa kunci berakhir, serta ganti-sandi dibatasi
+lima kegagalan per 15 menit. Yang belum: pemisahan kepemilikan materi/soal antar guru,
+rate limit nginx pada server lokal terintegrasi, dan pemindaian dependency terkunci.
+Jangan gunakan akun/data sekolah nyata dahulu.
 
 ## Belum tersedia
 
 - LLM eksternal: chat masih pencarian teks materi, dijalankan di server.
 - Ekstraksi PDF/DOCX; input TXT/MD atau tempel teks dapat disimpan sebagai materi.
-- Endpoint pengelolaan/impor/reset siswa masih 501; akun uji dibuat melalui setup lokal.
-- `/soal/generate` server masih 501; generator definisi frontend membuat draft, lalu
-  `/soal/terbitkan` memvalidasi dan menyimpannya.
-- Snapshot soal pada server dan idempotensi submit belum tersedia. Bila guru mengubah soal
-  saat latihan berlangsung, server menilai versi yang berlaku saat pengumpulan.
+- Materi dan soal belum punya pemilik, jadi semua guru berbagi satu ruang kerja.
+- Tidak ada pembersihan/perpanjangan sesi latihan yang ditinggal; sesi hanya ditandai
+  terpakai saat dikumpulkan.
+- Lupa sandi guru hanya lewat CLI (`python -m app.cli reset-sandi --email ...`), belum
+  ada jalur email.
 
 ## Pengujian
 

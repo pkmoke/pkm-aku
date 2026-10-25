@@ -29,6 +29,7 @@ export const api = {
   get: (p) => minta('GET', p),
   post: (p, b = {}) => minta('POST', p, b),
   put: (p, b = {}) => minta('PUT', p, b),
+  patch: (p, b = {}) => minta('PATCH', p, b),
   hapus: (p) => minta('DELETE', p),
   // Peran ditentukan server dari akun; tidak ada parameter peran dari browser.
   loginGuru: (identitas, kataSandi) => minta('POST', '/auth/login/guru', { identitas, kataSandi }),

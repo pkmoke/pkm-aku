@@ -1,8 +1,9 @@
 import { editMateri, editSoal } from './guru/editor.js';
-import { catatanTeknis, hapusAnalisisSekarang, renderAnalisis, resetData } from './guru/analisis.js';
+import { catatanTeknis, eksporNilai, hapusAnalisisSekarang, renderAnalisis, resetData } from './guru/analisis.js';
 import { hapusMateri, tambahMateri } from './guru/materi.js';
 import { generateSoal, sinkronKelasManual, tambahSoalManual, terbitkanSoal } from './guru/soal.js';
 import { pilihFile, tempelMateri } from './guru/upload.js';
+import { cariSiswa, filterSiswa, filterSiswaRombel, imporSiswa, resetSandiSiswa, statusSiswa, tambahSiswa } from './guru/siswa.js';
 import { kodeKelas, tingkatDari } from './konstanta.js';
 import { geserSorot, pasangSemuaTilt, pasangTilt } from './efek/inti.js';
 import { tampilkanView } from './efek/halaman.js';
@@ -91,7 +92,15 @@ export const AKSI = {
     const t = el.dataset.tingkat;
     $$(`${target} input`).forEach((c) => { if (tingkatDari(c.value) === t) c.checked = true; });
   },
-  hapusAnalisis() { return hapusAnalisisSekarang(); }
+  hapusAnalisis() { return hapusAnalisisSekarang(); },
+  eksporNilai() { return eksporNilai(); },
+  tambahSiswa() { return tambahSiswa(); },
+  imporSiswa() { return imporSiswa(); },
+  filterSiswa(el) { return filterSiswa(el); },
+  filterSiswaRombel(el) { return filterSiswaRombel(el); },
+  cariSiswa() { return cariSiswa(); },
+  resetSandiSiswa(el) { return resetSandiSiswa(el); },
+  statusSiswa(el) { return statusSiswa(el); }
 };
 
 document.addEventListener('click', (e) => {

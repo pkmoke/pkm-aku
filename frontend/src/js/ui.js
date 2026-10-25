@@ -3,6 +3,7 @@ import { renderDashboard } from './guru/dashboard.js';
 import { renderKelolaMateri } from './guru/materi.js';
 import { renderKelolaSoal } from './guru/soal.js';
 import { renderUpload } from './guru/upload.js';
+import { renderKelolaSiswa } from './guru/siswa.js';
 import { SISWA } from './konstanta.js';
 import { renderPilihLatihan } from './siswa/latihan.js';
 import { renderChips, renderMateriSiswa } from './siswa/materi.js';
@@ -16,7 +17,8 @@ export const JUDUL = {
   's-chat': 'Bemai — Chat Siswa', 's-materi': 'Materi Pembelajaran', 's-latihan': 'Latihan Soal',
   's-rangkuman': 'Rangkuman Materi', 's-riwayat': 'Riwayat Belajar',
   't-dashboard': 'Dashboard Guru', 't-materi': 'Kelola Materi', 't-soal': 'Kelola Soal',
-  't-upload': 'Upload Dokumen', 't-analisis': 'Analisis Hasil Belajar'
+  't-upload': 'Upload Dokumen', 't-analisis': 'Analisis Hasil Belajar',
+  't-siswa': 'Kelola Siswa'
 };
 
 export function toast(pesan) {
@@ -55,6 +57,7 @@ export function segarkanHalaman() {
   if (aktif === 't-materi') renderKelolaMateri();
   if (aktif === 't-soal') renderKelolaSoal();
   if (aktif === 't-upload') renderUpload();
+  if (aktif === 't-siswa') renderKelolaSiswa();
   if (aktif === 't-analisis') renderAnalisis();
 }
 

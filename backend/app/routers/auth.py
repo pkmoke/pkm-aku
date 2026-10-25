@@ -47,12 +47,21 @@ def _login(peran: str, body: Login, request: Request, response: Response, conn: 
 
     if not row or row["terkunci"] or not sandi_benar:
         if row and not row["terkunci"]:
-            gagal = row["gagal_login"] + 1
+            # Satu pernyataan: hitungan naik atomik dan masa kunci lama direset,
+            # supaya request paralel tidak bisa lolos dari batas percobaan.
             conn.execute(
-                """update pengguna set gagal_login = %s,
-                     terkunci_sampai = case when %s then now() + make_interval(mins => %s) else terkunci_sampai end
-                   where id = %s""",
-                (gagal, gagal >= cfg.maks_gagal_login, cfg.kunci_menit, row["id"]),
+                """with lama as (
+                     select id,
+                            case when terkunci_sampai is not null and terkunci_sampai <= now()
+                                 then 0 else gagal_login end as dasar
+                     from pengguna where id = %s for update
+                   )
+                   update pengguna p
+                      set gagal_login = lama.dasar + 1,
+                          terkunci_sampai = case when lama.dasar + 1 >= %s
+                            then now() + make_interval(mins => %s) else null end
+                     from lama where p.id = lama.id""",
+                (row["id"], cfg.maks_gagal_login, cfg.kunci_menit),
             )
         catat_audit(conn, f"login_gagal_{peran}", request, str(row["id"]) if row else None,
                     "terkunci" if row and row["terkunci"] else None)
@@ -101,7 +110,17 @@ def logout(request: Request, response: Response, conn: psycopg.Connection = Depe
 def ganti_sandi(body: GantiSandi, request: Request,
                 p: Pengguna = Depends(sesi_pengguna), conn: psycopg.Connection = Depends(koneksi)):
     lama = conn.execute("select kata_sandi_hash from pengguna where id = %s", (p.id,)).fetchone()
+    gagal = conn.execute(
+        """select count(*) as n from log_audit where pengguna_id = %s
+           and aksi = 'ganti_sandi_gagal' and waktu > now() - interval '15 minutes'""",
+        (p.id,),
+    ).fetchone()["n"]
+    if gagal >= 5:
+        raise Galat(429, "terlalu_banyak",
+                    "Terlalu banyak percobaan kata sandi lama. Coba lagi beberapa menit lagi.")
     if not cek_sandi(lama["kata_sandi_hash"], body.kataSandiLama):
+        catat_audit(conn, "ganti_sandi_gagal", request, p.id)
+        conn.commit()  # simpan jejak percobaan sebelum galat membatalkan transaksi
         raise Galat(400, "sandi_lama_salah", "Kata sandi lama tidak cocok")
     if body.kataSandiBaru == body.kataSandiLama:
         raise Galat(400, "sandi_sama", "Kata sandi baru harus berbeda")
