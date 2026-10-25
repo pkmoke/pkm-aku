@@ -1,8 +1,18 @@
-# Bemai — aplikasi pembelajaran terhubung
+# pkm-aku — Bemai, aplikasi pembelajaran terhubung
 
 Frontend ES modules, backend FastAPI, dan PostgreSQL. Login, sesi, materi, soal,
 penilaian, latihan ulang, chat, rangkuman yang disimpan, riwayat dan analisis kini
 menggunakan API. localStorage tidak dipakai sebagai database atau sumber hak akses.
+
+## Clone repository
+
+```sh
+git clone https://github.com/pkmoke/pkm-aku.git
+cd pkm-aku
+```
+
+Panduan lengkap: [menjalankan aplikasi](docs/menjalankan.md) ·
+[clone, pull, push, dan kolaborasi](docs/kolaborasi.md) · [kontrak API](docs/api.md).
 
 ## Menjalankan
 
@@ -85,4 +95,5 @@ Tes frontend lama `tests/rendering.cjs` dan `tests/learning.cjs` dibuat untuk mo
 localStorage dan tidak menggambarkan kontrak aplikasi terhubung.
 
 Laporan audit sebelum penyambungan: `audit/REVIEW.md` dan `audit/API-REVIEW.md`.
-Status penyambungan terbaru: `audit/CONNECTED.md`.
+Catatan `audit/CONNECTED.md` hanya tersedia lokal karena berisi kredensial pengujian.
+Untuk setup mesin baru gunakan [panduan menjalankan](docs/menjalankan.md).
